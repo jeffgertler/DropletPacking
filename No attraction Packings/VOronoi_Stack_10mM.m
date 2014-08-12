@@ -42,7 +42,7 @@ for k = 1: 2 :num_images
   map=colormap(hsv(ncolorbins));
   
   % Creating the crystal group
-  crystalGroup = crystalGroup();
+  crystalGroup = crystalGroup(angleError, v, c);
 
   for i = 1:length(c) 
       %disp(c{i})
@@ -79,21 +79,18 @@ for k = 1: 2 :num_images
       if(nneighbors == 6)
         % Adding droplets into crystal objects and checking angle edge case
         angs = mod(angs+360, 360); %makes negative angles positive
-        if(max(angs) + angleError > 360)
-          crystalNum = crystalGroup.addDroplet(i, max(angs), angleError);
-          disp(crystalNum);
-          if(crystalNum/crystalGroup.getSize())
-            patch(v(c{i},1),v(c{i},2),[1, ...
-                   (1*crystalNum/crystalGroup.getSize()), 0]);
-          end
-        else
-          crystalNum = crystalGroup.addDroplet(i, min(angs), angleError);
-          disp(crystalNum/crystalGroup.getSize());
-          if(crystalNum)
-            patch(v(c{i},1),v(c{i},2),[1, ...
-                    (1*crystalNum/crystalGroup.getSize()), 0]);
-          end
+        angle = 0;
+        %checking edge case
+        if(max(angs) + angleError > 360) angle = max(angs);
+        else angle = min(angs);
         end
+        
+        % Inserting droplet
+        crystalNum = crystalGroup.addDroplet(i, angle);
+        %if(crystalNum/crystalGroup.getSize())
+        %  patch(v(c{i},1),v(c{i},2),[1, ...
+        %         crystalNum/crystalGroup.getSize(), 0]);
+        %end
       else
         % Blacking out non hexagonal tiles
         patch(v(c{i},1),v(c{i},2),'k');
@@ -104,10 +101,10 @@ for k = 1: 2 :num_images
   end
   
   crystalGroup.printCrystals(0);
-  for i=1:crystalGroup.getSize()
-    indexes = crystalGroup.indexesForCrystal(i);
-    for index=1:length(indexes)
-      %patch(v(c{index},1),v(c{index},2),'r');
+  for crystalNum=1:crystalGroup.getSize()
+    droplets = crystalGroup.indexesForCrystal(crystalNum);
+    for droplet=1:length(droplets)
+      patch(v(c{droplet},1),v(c{droplet},2),[1, crystalNum/crystalGroup.getSize(), 0]);
     end
   end
   
