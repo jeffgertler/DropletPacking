@@ -6,14 +6,15 @@ close all;
 % imshow(fname)
 
 %Subjective tightness on inter-crystal angle
-angleError = 5;
+angleError = 60;
 
 fname = '10mM_series014.tif';
 info = imfinfo(fname);
 num_images = numel(info);
 
 for k = 1: 2 :num_images
-  fprintf('Image %i/%i', (k+1)/2, num_images/2);
+%for k=1:1
+  fprintf('Image %i/%i\n', (k+1)/2, num_images/2);
   A = imread(fname, k);
    
   [centers, radii] = imfindcircles(A,[6 9],'Sensitivity',0.95,'Method','twostage');
@@ -42,10 +43,31 @@ for k = 1: 2 :num_images
   map=colormap(hsv(ncolorbins));
   
   % Creating the crystal group
-  crystalGroup = crystalGroup(angleError, v, c);
+  cG = CrystalGroup(angleError, v, c);
 
-  for i = 1:length(c) 
-      %disp(c{i})
+  for i = 1:length(c)
+  %for i=1:123
+    if(abs(i/length(c)-.10)< .5/length(c))
+      disp('10% added');
+    elseif(abs(i/length(c)-.20)< .5/length(c))
+      disp('20% added');
+    elseif(abs(i/length(c)-.30)< .5/length(c))
+      disp('30% added');
+    elseif(abs(i/length(c)-.40)< .5/length(c))
+      disp('40% added');
+    elseif(abs(i/length(c)-.50)< .5/length(c))
+      disp('50% added');
+    elseif(abs(i/length(c)-.60)< .5/length(c))
+      disp('60% added');
+    elseif(abs(i/length(c)-.70)< .5/length(c))
+      disp('70% added');
+    elseif(abs(i/length(c)-.80)< .5/length(c))
+      disp('80% added');
+    elseif(abs(i/length(c)-.90)< .5/length(c))
+      disp('90% added');
+    end
+    
+    %disp(c{i})
     if all(c{i}~=1)   % If at least one of the indices is 1, 
                       % then it is an open region and we can't 
                       % patch that.
@@ -79,18 +101,20 @@ for k = 1: 2 :num_images
       if(nneighbors == 6)
         % Adding droplets into crystal objects and checking angle edge case
         angs = mod(angs+360, 360); %makes negative angles positive
-        angle = 0;
-        %checking edge case
-        if(max(angs) + angleError > 360) angle = max(angs);
-        else angle = min(angs);
+        % Checking that angles are approximetly equal
+        if(max(diff(sort(angs))) - min(diff(sort(angs))) < 25)
+          %checking edge case
+          angle = 0;
+          if(max(angs) + angleError > 360) angle = max(angs);
+          else angle = min(angs);
+          end
+
+          % Inserting droplet
+          cG.addDroplet(i, angle);
+        else
+          % Redding out tiles with uneven sides
+          patch(v(c{i},1),v(c{i},2),'r');
         end
-        
-        % Inserting droplet
-        crystalNum = crystalGroup.addDroplet(i, angle);
-        %if(crystalNum/crystalGroup.getSize())
-        %  patch(v(c{i},1),v(c{i},2),[1, ...
-        %         crystalNum/crystalGroup.getSize(), 0]);
-        %end
       else
         % Blacking out non hexagonal tiles
         patch(v(c{i},1),v(c{i},2),'k');
@@ -100,22 +124,23 @@ for k = 1: 2 :num_images
     end
   end
   
-  crystalGroup.printCrystals(0);
-  for crystalNum=1:crystalGroup.getSize()
-    droplets = crystalGroup.indexesForCrystal(crystalNum);
-    for droplet=1:length(droplets)
-      patch(v(c{droplet},1),v(c{droplet},2),[1, crystalNum/crystalGroup.getSize(), 0]);
-    end
-  end
+  cG.printCrystals(1);
+  crystals = cG.getCrystals();
+  cG.paintPatches();
   
+  %patch(v(c{123},1),v(c{123},2),[1, 0, 1]);
+  %patch(v(c{85},1),v(c{85},2),[1, 0, 1]);
 
+  %patch(v(c{104},1),v(c{104},2),[1, 0, 1]);
+  
+  
   axis([0 512 0 512]);
 
   drawnow;
 
   filename=strcat('voronoi_10mM_014-',num2str((k+1)/2));
   print('-dtiff',filename); 
- 
+
   
 %pause
 end
