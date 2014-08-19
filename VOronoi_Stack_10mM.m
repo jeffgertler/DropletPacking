@@ -124,8 +124,7 @@ for k = 1: 2 :num_images
     end
   end
   
-  cG.printCrystals(1);
-  crystals = cG.getCrystals();
+  cG.printCrystals(0);
   cG.paintPatches();
   
   %patch(v(c{123},1),v(c{123},2),[1, 0, 1]);

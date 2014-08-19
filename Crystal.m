@@ -15,10 +15,11 @@ classdef Crystal < handle
       obj.angle=angle;
       obj.dropletIndexes = {index};
       obj.dropletAngles = {angle};
+      obj.valid = 1;
     end
     
     function addDroplet(obj, index, angle)
-      if(~any(cell2mat(obj.droplets) == index))
+      if(~any(cell2mat(obj.dropletIndexes) == index))
         obj.size = obj.size + 1;
         obj.dropletIndexes = [obj.dropletIndexes; {index}];
         obj.dropletAngles = [obj.dropletAngles; {angle}];
@@ -47,6 +48,10 @@ classdef Crystal < handle
     
     function angles = getAngles(obj)
       angles = obj.dropletAngles;
+    end
+    
+    function crystalNum = getCrystalNum(obj)
+      crystalNum = obj.crystalNum;
     end
     
     function d = printInfo(obj)

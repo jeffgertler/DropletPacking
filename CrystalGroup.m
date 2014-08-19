@@ -14,7 +14,6 @@ classdef CrystalGroup < handle
       obj.error = error;
       obj.v = v;
       obj.c = c;
-      disp('test');
     end
     
     % Add a new droplet. Checks to see if the group is empty.
@@ -25,15 +24,19 @@ classdef CrystalGroup < handle
       obj.crystals = [obj.crystals; {newCrystal}];
       newCrystal.crystalNum = length(obj.crystals);
       % Checking for neighboring crystals
-      neighboringCrystals = findNeighboringCrystals(index);
+      neighboringCrystals = CrystalGroup.findNeighboringCrystals(index, obj.crystals, obj.c);
+      fprintf('index %i, length %i\n', index, length(neighboringCrystals));
       % Merging like angled crystals
       if(~isempty(neighboringCrystals))
         for i=1:length(neighboringCrystals)
-          if(abs(neighboringCrystals{i}.getAngle - angle) < obj.error || ...
-            abs(neighboringCrystals{i}.getAngle - angle) > (360-obj.error))
+          a = abs(neighboringCrystals{i}.getAngle() - angle) < obj.error;
+          b = abs(neighboringCrystals{i}.getAngle() - angle) > (360-obj.error);
+          if(a || b)
             % Merging
             if(newCrystal.getCrystalNum() ~= neighboringCrystals{i}.getCrystalNum())
-              mergeCrystals(newCrystal, neighboringCrystals{i});
+              fprintf('merging size %i with size %i\n', newCrystal.getSize(), ...
+                      neighboringCrystals{i}.getSize());
+              CrystalGroup.mergeCrystals(newCrystal, neighboringCrystals{i});
               obj.crystals{neighboringCrystals{i}.crystalNum}.remove();
             end
           end
@@ -41,7 +44,17 @@ classdef CrystalGroup < handle
       end
     end
     
-
+    function paintPatches(obj)
+      for i=1:length(obj.crystals)
+        if(obj.crystals{i}.isValid())
+          droplets = obj.crystals{i}.getIndexes();
+          color = [.2, rand, rand];
+          for j=1:length(droplets)
+            patch(obj.v(obj.c{j},1),obj.v(obj.c{j},2),color);
+          end
+        end
+      end
+    end
     
     function indexes = indexesForCrystal(obj, crystalNum)
       indexes = obj.crystals{crystalNum}.getIndexes();
@@ -74,22 +87,29 @@ classdef CrystalGroup < handle
     % Finds neighboring crystals of a droplet index
     function neighboringCrystals = findNeighboringCrystals(index, crystals, c)
       neighboringCrystals = {};
-      droplets = findNeighboringDroplets(index, c);
-      for i=1:length(droplets)
-        crystal = crystalForDroplet(droplets{i}, crystals);
-        neighboringCrystals = [neighboringCrystals; {crystal}];
+      droplets = CrystalGroup.findNeighboringDroplets(index, c);
+      if(~isempty(droplets))
+        for i=1:length(droplets)
+          crystal = CrystalGroup.crystalForDroplet(droplets{i}, crystals);
+          if(crystal.isValid())
+            neighboringCrystals = [neighboringCrystals; {crystal}];
+          end
+        end
       end
     end
     
     % Finds the crystal for a droplet index, returns -1 if not found.
     function crystal = crystalForDroplet(index, crystals)
-      for i=1:crystals
-        if(any(crystals{i}.getIndexes() == index) && crystals{i}.isValid())
-          crystal = crystals{i};
-          return
+      for i=1:length(crystals)
+        if(any(cell2mat(crystals{i}.getIndexes()) == index))
+          if(crystals{i}.isValid()>0)
+            crystal = crystals{i};
+            return
+          end
         end
       end
-      crystal = 0;
+      crystal = Crystal(-1, -1);
+      crystal.remove();
     end
     
     % Finds neighboring droplet indexes
@@ -98,8 +118,9 @@ classdef CrystalGroup < handle
       virticies = c{index};
       for i=1:length(c)
         testVirticies = c{i};
-        for j=1:length(virticies)
-          if(i ~= j && any(testVirticies == virticies(j)))
+        for j=1:length(testVirticies)
+          if(any(virticies == testVirticies(j)) && index ~= i ...
+              && ~any(cell2mat(neighboringDroplets) == i))
             neighboringDroplets = [neighboringDroplets; {i}];
           end
         end
