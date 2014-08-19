@@ -35,7 +35,7 @@ classdef CrystalGroup < handle
             % Merging
             if(newCrystal.getCrystalNum() ~= neighboringCrystals{i}.getCrystalNum())
               fprintf('merging size %i with size %i\n', newCrystal.getSize(), ...
-                      neighboringCrystals{i}.getSize());
+                        neighboringCrystals{i}.getSize());
               CrystalGroup.mergeCrystals(newCrystal, neighboringCrystals{i});
               obj.crystals{neighboringCrystals{i}.crystalNum}.remove();
             end
@@ -46,11 +46,11 @@ classdef CrystalGroup < handle
     
     function paintPatches(obj)
       for i=1:length(obj.crystals)
-        if(obj.crystals{i}.isValid())
+        if(obj.crystals{i}.isValid()>0)
           droplets = obj.crystals{i}.getIndexes();
-          color = [.2, rand, rand];
+          color = [.3, rand, rand];
           for j=1:length(droplets)
-            patch(obj.v(obj.c{j},1),obj.v(obj.c{j},2),color);
+            patch(obj.v(obj.c{droplets{j}},1),obj.v(obj.c{droplets{j}},2),color);
           end
         end
       end
